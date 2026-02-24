@@ -32,7 +32,7 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
       { pitch: -34, yaw: 150, to: "s1" },
       { pitch: -50, yaw: -148, to: "s3" },
     ],
-    s3: [{ pitch: -24, yaw: -139, to: "s1" }],
+    s3: [{ pitch: -24, yaw: 139, to: "s1" }],
   },
   "2A": {
     s1: [
@@ -229,7 +229,7 @@ export default function TourPage() {
         showControls: true,
         compass: false,
         sceneFadeDuration: 900,
-        hotSpotDebug: true,
+        hotSpotDebug: false,
       },
       scenes: {
         s1: { type: "equirectangular", panorama: scenes.s1, hotSpots: toHotSpots(active.s1) },
@@ -483,21 +483,54 @@ export default function TourPage() {
         </section>
       </div>
 
-      <style jsx global>{`
+            <style jsx global>{`
         .hs-dot {
+          position: relative;
           width: 22px;
           height: 22px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.95);
-          box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.35);
           cursor: pointer;
           transition: transform 0.2s ease, opacity 0.2s ease;
         }
+
+        .hs-dot::before {
+          content: "";
+          position: absolute;
+          inset: -10px;
+          border-radius: 999px;
+          background: radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.35) 0%,
+            rgba(255, 255, 255, 0.15) 40%,
+            rgba(255, 255, 255, 0.05) 60%,
+            transparent 70%
+          );
+          filter: blur(2px);
+          animation: hsPulse 2.4s ease-out infinite;
+        }
+
         .hs-dot:hover {
           transform: scale(1.15);
-          opacity: 0.9;
+          opacity: 0.95;
+        }
+
+        @keyframes hsPulse {
+          0% {
+            transform: scale(0.7);
+            opacity: 0.6;
+          }
+          60% {
+            transform: scale(1.2);
+            opacity: 0.2;
+          }
+          100% {
+            transform: scale(1.4);
+            opacity: 0;
+          }
         }
       `}</style>
-    </main>
+    </main> 
   );
 }

@@ -74,11 +74,11 @@ export default function ExplorarClient() {
 
   const [plantaActual, setPlantaActual] = useState<Piso>(pisoInicial);
 
-  // ✅ FIX DEL DELAY: src realmente renderizado (se mantiene el anterior hasta que carga el nuevo)
+  // ✅ FIX delay: swap suave (mantiene anterior hasta que cargue la nueva)
   const [imgSrc, setImgSrc] = useState<string>(pisoInicial.src);
   const [loadingPlanta, setLoadingPlanta] = useState(false);
 
-  // Cambia la planta cuando cambia el query param floor
+  // sync con query param
   useEffect(() => {
     const next =
       PISOS.find((p) => p.id.toLowerCase() === floorParam) ?? PISOS[0];
@@ -86,7 +86,7 @@ export default function ExplorarClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [floorParam]);
 
-  // ✅ Precarga de TODAS las plantas (reduce el micro-delay)
+  // precarga plantas (evita micro flash)
   useEffect(() => {
     PISOS.forEach((p) => {
       const img = new Image();
@@ -95,30 +95,24 @@ export default function ExplorarClient() {
     });
   }, []);
 
-  // ✅ Swap suave: solo cambiamos imgSrc cuando la nueva imagen terminó de cargar
+  // swap suave
   useEffect(() => {
     const nextSrc = plantaActual.src;
     if (!nextSrc || nextSrc === imgSrc) return;
 
     setLoadingPlanta(true);
-
     const img = new Image();
     img.decoding = "async";
     img.src = nextSrc;
 
-    const onDone = () => {
+    const done = () => {
       setImgSrc(nextSrc);
       setLoadingPlanta(false);
     };
 
-    img.onload = onDone;
-    img.onerror = () => {
-      // Si falla, igual cambiamos para no quedar “clavados”
-      setImgSrc(nextSrc);
-      setLoadingPlanta(false);
-    };
+    img.onload = done;
+    img.onerror = done;
 
-    // cleanup por si cambia rápido de planta
     return () => {
       img.onload = null;
       img.onerror = null;
@@ -141,7 +135,7 @@ export default function ExplorarClient() {
 
   return (
     <main className="relative h-screen w-screen bg-black text-white overflow-hidden">
-      {/* ✅ Menú premium consistente */}
+      {/* ✅ Menú premium global */}
       <TopLeftMenu backHref="/" />
 
       {/* PLANO FULL SCREEN */}
@@ -152,11 +146,7 @@ export default function ExplorarClient() {
           className="absolute inset-0 h-full w-full object-cover"
           draggable={false}
         />
-
-        {/* overlay suave para lectura */}
         <div className="absolute inset-0 bg-black/20" />
-
-        {/* ✅ Overlay sutil durante el cambio (evita el “micro flash”) */}
         {loadingPlanta && (
           <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
         )}
@@ -205,8 +195,8 @@ export default function ExplorarClient() {
                       <div>
                         <p className="text-sm font-medium">{u.nombre}</p>
                         <p className="mt-1 text-xs text-zinc-400">
-                          {u.tipo} – {u.frente ? "Frente" : "Contrafrente"} –{" "}
-                          {u.m2} m²
+                          {u.tipo} –{" "}
+                          {u.frente ? "Frente" : "Contrafrente"} – {u.m2} m²
                         </p>
                       </div>
 
@@ -262,10 +252,22 @@ export default function ExplorarClient() {
         })}
       </div>
 
-      {/* CARD DERECHA (centrada verticalmente) */}
-      <aside className="absolute right-6 top-1/2 -translate-y-1/2 z-40 w-[220px]">
-        <div className="rounded-[26px] bg-[#EAEAEA] p-4 shadow-xl">
-          <div className="flex flex-col gap-3">
+      {/* ✅ CARD PISOS RESPONSIVE:
+          - Mobile: bottom sheet centrado, scroll horizontal
+          - Desktop: igual que antes (derecha, centrado vertical)
+      */}
+      <aside
+        className="
+          fixed z-40
+          left-1/2 -translate-x-1/2 bottom-4
+          w-[92vw] max-w-[520px]
+          sm:absolute sm:left-auto sm:bottom-auto sm:right-6 sm:top-1/2
+          sm:-translate-y-1/2 sm:translate-x-0 sm:w-[220px]
+        "
+      >
+        <div className="rounded-[26px] bg-[#EAEAEA] p-3 sm:p-4 shadow-xl">
+          {/* mobile: horizontal */}
+          <div className="flex sm:flex-col gap-2 sm:gap-3 overflow-x-auto sm:overflow-visible">
             {PISOS.map((p) => {
               const active = plantaActual.id === p.id;
               return (
@@ -273,7 +275,8 @@ export default function ExplorarClient() {
                   key={p.id}
                   onClick={() => setPlantaActual(p)}
                   className={[
-                    "rounded-full px-4 py-3 text-[11px] uppercase tracking-widest transition",
+                    "shrink-0 rounded-full px-4 py-3 text-[11px] uppercase tracking-widest transition",
+                    "min-w-[150px] sm:min-w-0",
                     active
                       ? "bg-[#183e4b] text-[#EAEAEA]"
                       : "bg-[#8ba0a4] text-[#EAEAEA] hover:opacity-90",
@@ -284,6 +287,11 @@ export default function ExplorarClient() {
               );
             })}
           </div>
+
+          {/* hint mobile */}
+          <p className="mt-2 text-[11px] text-[#183e4b]/70 sm:hidden">
+            Deslizá para ver más pisos.
+          </p>
         </div>
       </aside>
     </main>
