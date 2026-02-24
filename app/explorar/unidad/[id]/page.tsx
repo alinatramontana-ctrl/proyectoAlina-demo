@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { UNIDADES } from "@/lib/unidades";
 
 function loadImage(src: string) {
@@ -73,27 +73,61 @@ export default function GaleriaUnidadPage() {
   const [images, setImages] = useState<string[]>([]);
   const [idx, setIdx] = useState(0);
 
+  // ✅ loading para evitar el flash de “no hay imágenes”
+  const [loading, setLoading] = useState(true);
+
+  // Para evitar race conditions si cambias de unidad rápido
+  const runIdRef = useRef(0);
+
   useEffect(() => {
     let cancelled = false;
+    const myRunId = ++runIdRef.current;
 
     async function run() {
+      setLoading(true);
       setIdx(0);
+      setImages([]);
+
       const found: string[] = [];
       const base = `/renders-unidades/${unidadId}`;
 
-      for (let i = 1; i <= 20; i++) {
-        const name = String(i).padStart(2, "0");
-        const src = `${base}/${name}.jpg`;
-        const ok = await loadImage(src);
+      // ✅ más rápido: probamos en “bloques” (paralelo)
+      // (si no existen, corta cuando ya encontró algo y falla un bloque siguiente)
+      const max = 20;
+      const batchSize = 4;
 
-        if (ok) found.push(src);
-        else if (found.length > 0) break;
+      for (let start = 1; start <= max; start += batchSize) {
+        const batch = [];
+        for (let i = start; i < start + batchSize && i <= max; i++) {
+          const name = String(i).padStart(2, "0");
+          const src = `${base}/${name}.jpg`;
+          batch.push({ i, src });
+        }
+
+        const results = await Promise.all(batch.map((b) => loadImage(b.src)));
+
+        let anyOk = false;
+        for (let j = 0; j < batch.length; j++) {
+          if (results[j]) {
+            anyOk = true;
+            found.push(batch[j].src);
+          }
+        }
+
+        // si ya veníamos encontrando y en este bloque no hubo ninguna => cortamos
+        if (!anyOk && found.length > 0) break;
+
+        if (cancelled || runIdRef.current !== myRunId) return;
       }
 
-      if (!cancelled) setImages(found);
+      if (!cancelled && runIdRef.current === myRunId) {
+        setImages(found);
+        setLoading(false);
+      }
     }
 
-    run();
+    if (unidadId) run();
+
     return () => {
       cancelled = true;
     };
@@ -135,8 +169,6 @@ export default function GaleriaUnidadPage() {
 
   const consultarHref = `/contacto?unidad=${encodeURIComponent(unidad.nombre)}`;
 
-  // Foto (placeholder) debajo de botones: poné tu imagen en:
-  // /public/renders-unidades/1A/cover.jpg (por ejemplo)
   const coverSrc = `/renders-unidades/${unidadId}/cover.jpg`;
 
   return (
@@ -164,7 +196,7 @@ export default function GaleriaUnidadPage() {
               </svg>
             </button>
 
-            {/* VOLVER (a planta / backHref) */}
+            {/* VOLVER */}
             <button
               type="button"
               onClick={() => router.push(backHref)}
@@ -240,7 +272,7 @@ export default function GaleriaUnidadPage() {
             </div>
           )}
 
-          {/* CONTENIDO (arranca más abajo para no chocarse con botones) */}
+          {/* CONTENIDO */}
           <div className="h-full overflow-y-auto px-6 pt-24 pb-8">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -268,28 +300,29 @@ export default function GaleriaUnidadPage() {
               <EstadoPill estado={unidad.estado} />
             </div>
 
-            {/* ✅ ESPACIO PARA FOTO (debajo de botones y antes de especificaciones) */}
+            {/* COVER */}
             <div className="mt-5">
               <div className="rounded-2xl border border-black/10 bg-slate-50 overflow-hidden">
                 <div className="relative w-full aspect-[16/9]">
-  <img
-    src={coverSrc}
-    alt={`Imagen de ${unidad.nombre}`}
-    className="absolute inset-0 h-full w-full object-cover"
-    onError={(e) => {
-      e.currentTarget.style.display = "none";
-      const placeholder = document.getElementById("cover-placeholder");
-      if (placeholder) placeholder.style.display = "flex";
-    }}
-  />
+                  <img
+                    src={coverSrc}
+                    alt={`Imagen de ${unidad.nombre}`}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const placeholder =
+                        document.getElementById("cover-placeholder");
+                      if (placeholder) placeholder.style.display = "flex";
+                    }}
+                  />
 
-  <div
-    id="cover-placeholder"
-    className="absolute inset-0 hidden items-center justify-center text-slate-400 text-sm"
-  >
-    (Sin imagen de portada)
-  </div>
-</div>
+                  <div
+                    id="cover-placeholder"
+                    className="absolute inset-0 hidden items-center justify-center text-slate-400 text-sm"
+                  >
+                    (Sin imagen de portada)
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -329,7 +362,7 @@ export default function GaleriaUnidadPage() {
               </div>
             </div>
 
-            {/* BOTONES debajo de especificaciones */}
+            {/* BOTONES */}
             <div className="mt-6 flex flex-col gap-3">
               <Link
                 href={consultarHref}
@@ -354,13 +387,27 @@ export default function GaleriaUnidadPage() {
           </div>
         </aside>
 
-        {/* GALERÍA (ocupa el resto de pantalla) */}
+        {/* GALERÍA */}
         <section className="relative flex-1">
           <div className="absolute inset-0 bg-[#e9f0f3]" />
 
-          {/* Imagen centrada en el área restante */}
           <div className="absolute inset-0 flex items-center justify-center">
-            {current ? (
+            {loading ? (
+              // ✅ Skeleton premium: evita el flash feo
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-[70%] max-w-[900px]">
+                  <div className="aspect-[16/9] rounded-2xl bg-white/60 border border-black/10 shadow-sm animate-pulse" />
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-black/15" />
+                    <span className="h-2 w-2 rounded-full bg-black/10" />
+                    <span className="h-2 w-2 rounded-full bg-black/10" />
+                  </div>
+                  <p className="mt-4 text-center text-slate-500 text-sm">
+                    Cargando renders…
+                  </p>
+                </div>
+              </div>
+            ) : current ? (
               <img
                 src={current}
                 alt={`${unidad.nombre} render ${idx + 1}`}
@@ -377,7 +424,7 @@ export default function GaleriaUnidadPage() {
           </div>
 
           {/* Flechas */}
-          {images.length > 1 && (
+          {images.length > 1 && !loading && (
             <>
               <button
                 type="button"
@@ -400,8 +447,8 @@ export default function GaleriaUnidadPage() {
 
           {/* Contador */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[11px] uppercase tracking-widest text-slate-700 bg-white/70 border border-black/10 px-3 py-1 rounded-full z-20">
-            {images.length ? `${idx + 1} / ${images.length}` : "0 / 0"} — ← → para
-            navegar · ESC para volver
+            {loading ? "Cargando…" : images.length ? `${idx + 1} / ${images.length}` : "0 / 0"}{" "}
+            — ← → para navegar · ESC para volver
           </div>
         </section>
       </div>

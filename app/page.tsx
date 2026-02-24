@@ -5,29 +5,14 @@ import { useEffect, useState } from "react";
 import { Source_Sans_3 } from "next/font/google";
 import Image from "next/image";
 
-<div className="w-[520px] max-w-[85vw]">
-  <Image
-    src="/images/logo.svg"
-    alt="Edificio Innovate"
-    width={1200}
-    height={400}
-    priority
-    className="h-auto w-full object-contain bg-transparent"
-  />
-</div>
-
-
-
 const sourceSans = Source_Sans_3({
   subsets: ["latin"],
   weight: ["400", "600"],
 });
 
-
 export default function Home() {
   const [open, setOpen] = useState(false);
 
-  // ESC cierra el menú si está abierto
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -37,8 +22,9 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-hidden text-white">
-      {/* Video de fondo */}
+    <main className={`${sourceSans.className} relative min-h-screen overflow-hidden text-white bg-black`}>
+      
+      {/* VIDEO HERO */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/videos/hero.mp4"
@@ -46,14 +32,15 @@ export default function Home() {
         muted
         loop
         playsInline
+        preload="auto"
         poster="/images/hero.jpg"
       />
 
-      {/* Overlays */}
+      {/* OVERLAYS */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/35 to-black/60" />
       <div className="absolute inset-0 [box-shadow:inset_0_0_120px_rgba(0,0,0,0.45)]" />
 
-      {/* Botón hamburguesa */}
+      {/* BOTÓN MENU */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -65,10 +52,9 @@ export default function Home() {
         <span className="mt-1.5 block h-[2px] w-6 bg-white" />
       </button>
 
-      {/* Panel del menú (card ovalada) */}
+      {/* MENU */}
       {open && (
         <>
-          {/* backdrop click para cerrar */}
           <button
             type="button"
             aria-label="Cerrar menú"
@@ -137,21 +123,18 @@ export default function Home() {
         </>
       )}
 
-      {/* Contenido central (sin botones visibles) */}
+      {/* LOGO CENTRAL */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center text-center px-6">
         <div className="w-[680px] max-w-[90vw]">
-  <Image
-    src="/images/logo.svg"
-    alt="Edificio Innovate"
-    width={1600}
-    height={500}
-    priority
-    className="h-auto w-full object-contain bg-transparent"
-  />
-</div>
-
-        
-      
+          <Image
+            src="/images/logo.svg"
+            alt="Edificio Innovate"
+            width={1600}
+            height={500}
+            priority
+            className="h-auto w-full object-contain"
+          />
+        </div>
       </div>
     </main>
   );
