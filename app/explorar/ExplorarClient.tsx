@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { UNIDADES } from "@/lib/unidades";
+import TopLeftMenu from "@/app/components/TopLeftMenu";
 
 type Piso = {
   id: string;
@@ -34,8 +35,8 @@ const HOTSPOTS: Hotspot[] = [
   { pisoId: "2", unidadId: "2A", label: "2A", x: 50, y: 55 },
   { pisoId: "2", unidadId: "2B", label: "2B", x: 68, y: 55 },
 
-  { pisoId: "3", unidadId: "3A", label: "3A", x: 50, y: 55 },
-  { pisoId: "3", unidadId: "3B", label: "3B", x: 68, y: 55 },
+  { pisoId: "3", unidadId: "3A", label: "3A", x: 50, y: 60 },
+  { pisoId: "3", unidadId: "3B", label: "3B", x: 68, y: 60 },
 
   { pisoId: "pb", unidadId: "L1", label: "L1", x: 45, y: 50 },
   { pisoId: "pb", unidadId: "L2", label: "L2", x: 70, y: 50 },
@@ -73,9 +74,6 @@ export default function ExplorarClient() {
 
   const [plantaActual, setPlantaActual] = useState<Piso>(pisoInicial);
 
-  // Menú (botón + card)
-  const [menuOpen, setMenuOpen] = useState(false);
-
   useEffect(() => {
     const next =
       PISOS.find((p) => p.id.toLowerCase() === floorParam) ?? PISOS[0];
@@ -99,131 +97,20 @@ export default function ExplorarClient() {
 
   return (
     <main className="relative h-screen w-screen bg-black text-white overflow-hidden">
+      {/* ✅ TOP LEFT: mismo componente que en Contacto/Ubicación (estética consistente) */}
+      <TopLeftMenu backHref="/" />
+
       {/* PLANO FULL SCREEN */}
       <div className="absolute inset-0">
         <img
           src={plantaActual.src}
           alt={`Plano ${plantaActual.label}`}
           className="absolute inset-0 h-full w-full object-cover"
+          draggable={false}
         />
 
         {/* overlay suave para que todo se lea mejor */}
         <div className="absolute inset-0 bg-black/20" />
-      </div>
-
-      {/* TOP LEFT: botones fijos + menú ABSOLUTO (NO mueve los botones) */}
-      <div className="fixed left-6 top-6 z-50">
-        {/* Este wrapper "relative" es la clave: el menú se posiciona absoluto debajo */}
-        <div className="relative">
-          <div className="flex items-center gap-3">
-            {/* MENU (primero) */}
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              className="h-11 w-11 rounded-full border border-white/25 bg-black/35 backdrop-blur flex items-center justify-center hover:bg-black/50 transition"
-              aria-label="Menú"
-              title="Menú"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M4 6h16M4 12h16M4 18h16"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-
-            {/* VOLVER (segundo) */}
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              className="h-11 w-11 rounded-full border border-white/25 bg-black/35 backdrop-blur flex items-center justify-center hover:bg-black/50 transition"
-              aria-label="Volver al inicio"
-              title="Volver"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M15 18l-6-6 6-6"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* CARD MENU: se abre HACIA ABAJO, sin empujar nada */}
-          {menuOpen && (
-            <>
-              {/* Backdrop invisible para cerrar al click afuera */}
-              <button
-                type="button"
-                aria-label="Cerrar menú"
-                onClick={() => setMenuOpen(false)}
-                className="fixed inset-0 z-40 cursor-default"
-              />
-
-              <div className="absolute left-0 top-[56px] z-50 w-[270px] rounded-[26px] bg-[#EAEAEA] text-[#183e4b] shadow-xl overflow-hidden">
-                <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-[#183e4b]/70">
-                      Menú
-                    </p>
-                    <p className="mt-1 text-lg leading-tight font-semibold">
-                      Edificio Innovate
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setMenuOpen(false)}
-                    className="rounded-full bg-black/10 px-3 py-1 text-[11px] uppercase tracking-widest hover:bg-black/15 transition"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-
-                <div className="px-5 pb-5 flex flex-col gap-3">
-                  <Link
-                    href="/explorar"
-                    className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Explorar edificio
-                  </Link>
-                  <Link
-                    href="/unidades"
-                    className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Ver unidades
-                  </Link>
-                  <Link
-                    href="/ubicacion"
-                    className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Ubicación
-                  </Link>
-                  <Link
-                    href="/contacto"
-                    className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Contacto
-                  </Link>
-
-                  <p className="mt-1 text-[11px] text-[#183e4b]/70">
-                    Tip: presioná <span className="font-semibold">ESC</span>{" "}
-                    para volver al inicio.
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
       </div>
 
       {/* HOTSPOTS */}
@@ -269,8 +156,8 @@ export default function ExplorarClient() {
                       <div>
                         <p className="text-sm font-medium">{u.nombre}</p>
                         <p className="mt-1 text-xs text-zinc-400">
-                          {u.tipo} –{" "}
-                          {u.frente ? "Frente" : "Contrafrente"} – {u.m2} m²
+                          {u.tipo} – {u.frente ? "Frente" : "Contrafrente"} –{" "}
+                          {u.m2} m²
                         </p>
                       </div>
 
