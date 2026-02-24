@@ -74,12 +74,56 @@ export default function ExplorarClient() {
 
   const [plantaActual, setPlantaActual] = useState<Piso>(pisoInicial);
 
+  // ✅ FIX DEL DELAY: src realmente renderizado (se mantiene el anterior hasta que carga el nuevo)
+  const [imgSrc, setImgSrc] = useState<string>(pisoInicial.src);
+  const [loadingPlanta, setLoadingPlanta] = useState(false);
+
+  // Cambia la planta cuando cambia el query param floor
   useEffect(() => {
     const next =
       PISOS.find((p) => p.id.toLowerCase() === floorParam) ?? PISOS[0];
     setPlantaActual(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [floorParam]);
+
+  // ✅ Precarga de TODAS las plantas (reduce el micro-delay)
+  useEffect(() => {
+    PISOS.forEach((p) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = p.src;
+    });
+  }, []);
+
+  // ✅ Swap suave: solo cambiamos imgSrc cuando la nueva imagen terminó de cargar
+  useEffect(() => {
+    const nextSrc = plantaActual.src;
+    if (!nextSrc || nextSrc === imgSrc) return;
+
+    setLoadingPlanta(true);
+
+    const img = new Image();
+    img.decoding = "async";
+    img.src = nextSrc;
+
+    const onDone = () => {
+      setImgSrc(nextSrc);
+      setLoadingPlanta(false);
+    };
+
+    img.onload = onDone;
+    img.onerror = () => {
+      // Si falla, igual cambiamos para no quedar “clavados”
+      setImgSrc(nextSrc);
+      setLoadingPlanta(false);
+    };
+
+    // cleanup por si cambia rápido de planta
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [plantaActual.src, imgSrc]);
 
   // ESC → volver al inicio
   useEffect(() => {
@@ -97,20 +141,25 @@ export default function ExplorarClient() {
 
   return (
     <main className="relative h-screen w-screen bg-black text-white overflow-hidden">
-      {/* ✅ TOP LEFT: mismo componente que en Contacto/Ubicación (estética consistente) */}
+      {/* ✅ Menú premium consistente */}
       <TopLeftMenu backHref="/" />
 
       {/* PLANO FULL SCREEN */}
       <div className="absolute inset-0">
         <img
-          src={plantaActual.src}
+          src={imgSrc}
           alt={`Plano ${plantaActual.label}`}
           className="absolute inset-0 h-full w-full object-cover"
           draggable={false}
         />
 
-        {/* overlay suave para que todo se lea mejor */}
+        {/* overlay suave para lectura */}
         <div className="absolute inset-0 bg-black/20" />
+
+        {/* ✅ Overlay sutil durante el cambio (evita el “micro flash”) */}
+        {loadingPlanta && (
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+        )}
       </div>
 
       {/* HOTSPOTS */}

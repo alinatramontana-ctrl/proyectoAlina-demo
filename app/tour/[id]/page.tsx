@@ -11,7 +11,6 @@ type UnitId = "1A" | "1B" | "2A" | "2B" | "3A" | "3B";
 type HS = { pitch: number; yaw: number; to: SceneId };
 type UnitHotspots = Record<SceneId, HS[]>;
 
-// ✅ HOTSPOTS POR UNIDAD
 const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
   "1A": {
     s1: [
@@ -24,19 +23,17 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
     ],
     s3: [{ pitch: -23.53, yaw: -146.56, to: "s1" }],
   },
-
   "1B": {
     s1: [
       { pitch: -34, yaw: 85, to: "s2" },
       { pitch: -34, yaw: 55.0, to: "s3" },
     ],
     s2: [
-      { pitch: -39, yaw: 177, to: "s1" },
-      { pitch: -44, yaw: -94, to: "s3" },
+      { pitch: -34, yaw: 150, to: "s1" },
+      { pitch: -50, yaw: -148, to: "s3" },
     ],
     s3: [{ pitch: -24, yaw: -139, to: "s1" }],
   },
-
   "2A": {
     s1: [
       { pitch: -26, yaw: 26, to: "s2" },
@@ -45,7 +42,6 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
     s2: [{ pitch: -48, yaw: -159, to: "s1" }],
     s3: [{ pitch: -55, yaw: -132, to: "s1" }],
   },
-
   "2B": {
     s1: [
       { pitch: -24.67, yaw: 102, to: "s2" },
@@ -54,7 +50,6 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
     s2: [{ pitch: -63, yaw: -144, to: "s1" }],
     s3: [{ pitch: -51, yaw: -52, to: "s1" }],
   },
-
   "3A": {
     s1: [
       { pitch: -26, yaw: 26, to: "s2" },
@@ -63,7 +58,6 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
     s2: [{ pitch: -48, yaw: -159, to: "s1" }],
     s3: [{ pitch: -55, yaw: -132, to: "s1" }],
   },
-
   "3B": {
     s1: [
       { pitch: -24.67, yaw: 102, to: "s2" },
@@ -77,21 +71,16 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
 function EstadoPill({ estado }: { estado: string }) {
   const base =
     "inline-flex items-center rounded-full px-3 py-1 text-[11px] uppercase tracking-widest border";
-
   if (estado === "Disponible") {
     return (
-      <span
-        className={`${base} border-emerald-300/60 bg-emerald-500/10 text-emerald-600`}
-      >
+      <span className={`${base} border-emerald-300/60 bg-emerald-500/10 text-emerald-600`}>
         Disponible
       </span>
     );
   }
   if (estado === "Reservado") {
     return (
-      <span
-        className={`${base} border-amber-300/60 bg-amber-500/10 text-amber-700`}
-      >
+      <span className={`${base} border-amber-300/60 bg-amber-500/10 text-amber-700`}>
         Reservado
       </span>
     );
@@ -117,6 +106,12 @@ function sceneFromParam(pano: string | null): SceneId | null {
   return null;
 }
 
+function preload(src: string) {
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+}
+
 export default function TourPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -131,12 +126,12 @@ export default function TourPage() {
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Datos unidad (para sidebar)
+  const panoParam = searchParams.get("pano");
+
   const unidad = useMemo(() => {
     return UNIDADES.find((u) => String(u.id).toUpperCase() === id) ?? null;
   }, [id]);
 
-  // escenas
   const scenes = useMemo(() => {
     const base = `/panos/${encodeURIComponent(id)}`;
     return {
@@ -146,19 +141,23 @@ export default function TourPage() {
     } as const;
   }, [id]);
 
-  // thumbs (si no tenés thumbs, crealos en /public/panos/ID/thumbs/01.jpg etc.)
-  const thumbs = {
-  s1: scenes.s1,
-  s2: scenes.s2,
-  s3: scenes.s3,
-};
+  // thumbs livianos (con fallback al pano full si falta el archivo)
+  const thumbs = useMemo(() => {
+    const base = `/panos/${encodeURIComponent(id)}/thumbs`;
+    return {
+      s1: `${base}/01.jpg`,
+      s2: `${base}/02.jpg`,
+      s3: `${base}/03.jpg`,
+      _fallback1: scenes.s1,
+      _fallback2: scenes.s2,
+      _fallback3: scenes.s3,
+    };
+  }, [id, scenes]);
 
-  // volver inteligente (igual que explorar)
   const backHref = useMemo(() => {
     const from = searchParams.get("from");
     const floor = searchParams.get("floor");
-    if (from === "explorar" && floor)
-      return `/explorar?floor=${encodeURIComponent(floor)}`;
+    if (from === "explorar" && floor) return `/explorar?floor=${encodeURIComponent(floor)}`;
     if (from === "unidades") return "/unidades";
     return "";
   }, [searchParams]);
@@ -168,7 +167,6 @@ export default function TourPage() {
     else router.back();
   };
 
-  // ESC
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onBack();
@@ -178,7 +176,12 @@ export default function TourPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backHref]);
 
-  // Init Pannellum
+  // ✅ Preload mínimo: SOLO la inicial (prioriza time-to-first-view)
+  useEffect(() => {
+    preload(scenes.s1);
+  }, [scenes]);
+
+  // ✅ INIT Pannellum (no reinit por searchParams entero)
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -192,7 +195,6 @@ export default function TourPage() {
 
     const unitHotspots = HOTSPOTS_BY_UNIT[unitId];
 
-    // fallback seguro
     const fallback: UnitHotspots = {
       s1: [{ pitch: -10, yaw: 30, to: "s2" }],
       s2: [
@@ -211,10 +213,14 @@ export default function TourPage() {
         type: "custom",
         cssClass: "hs-dot",
         createTooltipFunc: hotspotDot,
-        clickHandlerFunc: () => viewerRef.current?.loadScene?.(h.to),
+        clickHandlerFunc: () => {
+          // ✅ Preload de la escena destino antes del salto
+          preload(scenes[h.to]);
+          viewerRef.current?.loadScene?.(h.to);
+        },
       }));
 
-    const startScene = sceneFromParam(searchParams.get("pano")) ?? "s1";
+    const startScene = sceneFromParam(panoParam) ?? "s1";
 
     const cfg = {
       default: {
@@ -223,29 +229,36 @@ export default function TourPage() {
         showControls: true,
         compass: false,
         sceneFadeDuration: 900,
-        hotSpotDebug: false, // ponelo true cuando quieras medir
+        hotSpotDebug: true,
       },
       scenes: {
-        s1: {
-          type: "equirectangular",
-          panorama: scenes.s1,
-          hotSpots: toHotSpots(active.s1),
-        },
-        s2: {
-          type: "equirectangular",
-          panorama: scenes.s2,
-          hotSpots: toHotSpots(active.s2),
-        },
-        s3: {
-          type: "equirectangular",
-          panorama: scenes.s3,
-          hotSpots: toHotSpots(active.s3),
-        },
+        s1: { type: "equirectangular", panorama: scenes.s1, hotSpots: toHotSpots(active.s1) },
+        s2: { type: "equirectangular", panorama: scenes.s2, hotSpots: toHotSpots(active.s2) },
+        s3: { type: "equirectangular", panorama: scenes.s3, hotSpots: toHotSpots(active.s3) },
       },
     };
 
+    setReady(false);
     viewerRef.current = pannellum.viewer(containerRef.current, cfg);
-    setReady(true);
+
+    // ✅ Cuando terminó de cargar la escena actual:
+    // 1) marcamos ready
+    // 2) precargamos las otras en background (progresivo)
+    try {
+      viewerRef.current?.on?.("load", () => {
+        setReady(true);
+
+        // Background preload (después de tener imagen en pantalla)
+        // Si estás en s1, precargamos s2 y s3; si estás en s2, precargamos s1 y s3, etc.
+        preload(scenes.s1);
+        preload(scenes.s2);
+        preload(scenes.s3);
+      });
+    } catch {
+      setReady(true);
+      preload(scenes.s2);
+      preload(scenes.s3);
+    }
 
     return () => {
       try {
@@ -254,9 +267,18 @@ export default function TourPage() {
       viewerRef.current = null;
       setReady(false);
     };
-  }, [scenes, unitId, searchParams, id]);
+  }, [scenes, unitId, panoParam]);
 
-  // UI textos
+  // ✅ Cambio por query param sin reiniciar el viewer
+  useEffect(() => {
+    const target = sceneFromParam(panoParam);
+    if (!target) return;
+    if (!viewerRef.current?.loadScene) return;
+
+    preload(scenes[target]);
+    viewerRef.current.loadScene(target);
+  }, [panoParam, scenes]);
+
   const subtitulo = unidad
     ? `${unidad.tipo} · ${unidad.frente ? "Frente" : "Contrafrente"} · ${unidad.m2} m²`
     : `Unidad ${id}`;
@@ -264,11 +286,9 @@ export default function TourPage() {
   return (
     <main className="h-screen w-screen overflow-hidden bg-[#e9f0f3]">
       <div className="relative h-full w-full flex">
-        {/* SIDEBAR IZQUIERDA (FIJA) */}
+        {/* SIDEBAR IZQUIERDA */}
         <aside className="relative z-30 w-[360px] shrink-0 bg-white text-slate-900 border-r border-black/10">
-          {/* Botonera arriba izquierda */}
           <div className="absolute left-4 top-4 z-40 flex items-center gap-3">
-            {/* MENU */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
@@ -277,16 +297,10 @@ export default function TourPage() {
               title="Menú"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M4 6h16M4 12h16M4 18h16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
 
-            {/* VOLVER (a planta / backHref) */}
             <button
               type="button"
               onClick={onBack}
@@ -295,18 +309,12 @@ export default function TourPage() {
               title="Volver"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M15 18l-6-6 6-6"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           </div>
 
-          {/* CARD MENÚ desplegable */}
+          {/* (tu menú desplegable + contenido sigue igual) */}
           {menuOpen && (
             <div className="absolute left-4 top-[72px] z-40 w-[300px] rounded-[26px] bg-[#EAEAEA] text-[#183e4b] shadow-xl overflow-hidden">
               <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
@@ -362,7 +370,6 @@ export default function TourPage() {
             </div>
           )}
 
-          {/* CONTENIDO */}
           <div className="h-full overflow-y-auto px-6 pt-24 pb-8">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -436,32 +443,38 @@ export default function TourPage() {
           </div>
         </aside>
 
-        {/* VISOR (ocupa el resto de pantalla) */}
+        {/* VISOR */}
         <section className="relative flex-1">
           <div className="absolute inset-0 bg-[#e9f0f3]" />
 
-          {/* Pannellum full */}
           <div className="absolute inset-0">
             <div ref={containerRef} className="h-full w-full" />
           </div>
 
-          {/* Tira inferior de panorámicas (igual idea que pediste en explorar) */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
             <div className="rounded-full bg-black/30 backdrop-blur border border-white/10 px-3 py-2 flex items-center gap-2">
               {(["s1", "s2", "s3"] as SceneId[]).map((s, i) => (
                 <button
                   key={s}
                   type="button"
-                  onClick={() => viewerRef.current?.loadScene?.(s)}
+                  onClick={() => {
+                    preload(scenes[s]);
+                    viewerRef.current?.loadScene?.(s);
+                  }}
                   className="h-10 w-14 rounded-lg overflow-hidden border border-white/15 hover:border-white/40 transition"
                   title={`Panorámica ${String(i + 1).padStart(2, "0")}`}
                   aria-label={`Panorámica ${i + 1}`}
                 >
                   <img
-                    src={thumbs[s]}
+                    src={(thumbs as any)[s] ?? (thumbs as any)[`_fallback${i + 1}`]}
                     alt={`Panorámica ${i + 1}`}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        (thumbs as any)[`_fallback${i + 1}`];
+                    }}
                   />
                 </button>
               ))}
