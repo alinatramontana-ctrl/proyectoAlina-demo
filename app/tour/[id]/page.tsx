@@ -7,7 +7,6 @@ import { UNIDADES } from "@/lib/unidades";
 
 type SceneId = "s1" | "s2" | "s3";
 type UnitId = "1A" | "1B" | "2A" | "2B" | "3A" | "3B";
-
 type HS = { pitch: number; yaw: number; to: SceneId };
 type UnitHotspots = Record<SceneId, HS[]>;
 
@@ -29,10 +28,10 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
       { pitch: -34, yaw: 55.0, to: "s3" },
     ],
     s2: [
-      { pitch: -34, yaw: 150, to: "s1" },
-      { pitch: -50, yaw: -148, to: "s3" },
+      { pitch: -39, yaw: 177, to: "s1" },
+      { pitch: -44, yaw: -94, to: "s3" },
     ],
-    s3: [{ pitch: -24, yaw: 139, to: "s1" }],
+    s3: [{ pitch: -24, yaw: -139, to: "s1" }],
   },
   "2A": {
     s1: [
@@ -126,6 +125,9 @@ export default function TourPage() {
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // ✅ Mobile: drawer info
+  const [infoOpen, setInfoOpen] = useState(false);
+
   const panoParam = searchParams.get("pano");
 
   const unidad = useMemo(() => {
@@ -141,16 +143,15 @@ export default function TourPage() {
     } as const;
   }, [id]);
 
-  // thumbs livianos (con fallback al pano full si falta el archivo)
   const thumbs = useMemo(() => {
     const base = `/panos/${encodeURIComponent(id)}/thumbs`;
     return {
       s1: `${base}/01.jpg`,
       s2: `${base}/02.jpg`,
       s3: `${base}/03.jpg`,
-      _fallback1: scenes.s1,
-      _fallback2: scenes.s2,
-      _fallback3: scenes.s3,
+      f1: scenes.s1,
+      f2: scenes.s2,
+      f3: scenes.s3,
     };
   }, [id, scenes]);
 
@@ -167,6 +168,7 @@ export default function TourPage() {
     else router.back();
   };
 
+  // ESC
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onBack();
@@ -176,12 +178,12 @@ export default function TourPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backHref]);
 
-  // ✅ Preload mínimo: SOLO la inicial (prioriza time-to-first-view)
+  // preload inicial
   useEffect(() => {
     preload(scenes.s1);
   }, [scenes]);
 
-  // ✅ INIT Pannellum (no reinit por searchParams entero)
+  // init viewer
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -214,7 +216,6 @@ export default function TourPage() {
         cssClass: "hs-dot",
         createTooltipFunc: hotspotDot,
         clickHandlerFunc: () => {
-          // ✅ Preload de la escena destino antes del salto
           preload(scenes[h.to]);
           viewerRef.current?.loadScene?.(h.to);
         },
@@ -241,15 +242,10 @@ export default function TourPage() {
     setReady(false);
     viewerRef.current = pannellum.viewer(containerRef.current, cfg);
 
-    // ✅ Cuando terminó de cargar la escena actual:
-    // 1) marcamos ready
-    // 2) precargamos las otras en background (progresivo)
     try {
       viewerRef.current?.on?.("load", () => {
         setReady(true);
-
-        // Background preload (después de tener imagen en pantalla)
-        // Si estás en s1, precargamos s2 y s3; si estás en s2, precargamos s1 y s3, etc.
+        // preload background después de mostrar algo
         preload(scenes.s1);
         preload(scenes.s2);
         preload(scenes.s3);
@@ -269,12 +265,11 @@ export default function TourPage() {
     };
   }, [scenes, unitId, panoParam]);
 
-  // ✅ Cambio por query param sin reiniciar el viewer
+  // cambiar por query sin reiniciar
   useEffect(() => {
     const target = sceneFromParam(panoParam);
     if (!target) return;
     if (!viewerRef.current?.loadScene) return;
-
     preload(scenes[target]);
     viewerRef.current.loadScene(target);
   }, [panoParam, scenes]);
@@ -285,38 +280,61 @@ export default function TourPage() {
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-[#e9f0f3]">
-      <div className="relative h-full w-full flex">
-        {/* SIDEBAR IZQUIERDA */}
-        <aside className="relative z-30 w-[360px] shrink-0 bg-white text-slate-900 border-r border-black/10">
-          <div className="absolute left-4 top-4 z-40 flex items-center gap-3">
+      {/* VISOR SIEMPRE FULL */}
+      <section className="relative h-full w-full">
+        <div className="absolute inset-0 bg-[#e9f0f3]" />
+        <div className="absolute inset-0">
+          <div ref={containerRef} className="h-full w-full" />
+        </div>
+
+        {/* Top left (mobile + desktop) */}
+        <div className="fixed left-4 top-4 z-50 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="h-11 w-11 rounded-full bg-emerald-200/70 text-slate-900 shadow-sm border border-black/10 hover:bg-emerald-200 transition flex items-center justify-center"
+            aria-label="Menú"
+            title="Menú"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={onBack}
+            className="h-11 w-11 rounded-full bg-white/80 text-slate-900 shadow-sm border border-black/10 hover:bg-white transition flex items-center justify-center"
+            aria-label="Volver"
+            title="Volver"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {/* Mobile: botón info */}
+          <button
+            type="button"
+            onClick={() => setInfoOpen(true)}
+            className="sm:hidden h-11 px-4 rounded-full bg-white/80 text-slate-900 shadow-sm border border-black/10 hover:bg-white transition text-[11px] uppercase tracking-widest"
+            aria-label="Info"
+            title="Info"
+          >
+            Info
+          </button>
+        </div>
+
+        {/* Menú desplegable */}
+        {menuOpen && (
+          <>
             <button
               type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              className="h-11 w-11 rounded-full bg-emerald-200/70 text-slate-900 shadow-sm border border-black/10 hover:bg-emerald-200 transition flex items-center justify-center"
-              aria-label="Menú"
-              title="Menú"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              onClick={onBack}
-              className="h-11 w-11 rounded-full bg-white/80 text-slate-900 shadow-sm border border-black/10 hover:bg-white transition flex items-center justify-center"
-              aria-label="Volver"
-              title="Volver"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-
-          {/* (tu menú desplegable + contenido sigue igual) */}
-          {menuOpen && (
-            <div className="absolute left-4 top-[72px] z-40 w-[300px] rounded-[26px] bg-[#EAEAEA] text-[#183e4b] shadow-xl overflow-hidden">
+              aria-label="Cerrar menú"
+              onClick={() => setMenuOpen(false)}
+              className="fixed inset-0 z-40"
+            />
+            <div className="fixed left-4 top-[72px] z-50 w-[300px] rounded-[26px] bg-[#EAEAEA] text-[#183e4b] shadow-xl overflow-hidden">
               <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.25em] text-[#183e4b]/70">
@@ -361,37 +379,55 @@ export default function TourPage() {
                 >
                   Contacto
                 </Link>
-
                 <p className="mt-1 text-[11px] text-[#183e4b]/70">
-                  Tip: presioná <span className="font-semibold">ESC</span> para
-                  volver a la planta.
+                  Tip: presioná <span className="font-semibold">ESC</span> para volver.
                 </p>
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          <div className="h-full overflow-y-auto px-6 pt-24 pb-8">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-widest text-slate-500">
-                  Tour 360°
-                </p>
-                <h1 className="mt-1 text-2xl font-semibold leading-tight">
-                  Unidad {id}
-                </h1>
-                <p className="mt-1 text-sm text-slate-500">{subtitulo}</p>
-              </div>
-
+        {/* Thumbs bottom */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
+          <div className="rounded-full bg-black/30 backdrop-blur border border-white/10 px-3 py-2 flex items-center gap-2">
+            {(["s1", "s2", "s3"] as SceneId[]).map((s, i) => (
               <button
+                key={s}
                 type="button"
-                onClick={onBack}
-                className="h-10 w-10 rounded-full border border-black/10 bg-white hover:bg-slate-50 transition flex items-center justify-center"
-                aria-label="Cerrar"
-                title="Cerrar"
+                onClick={() => {
+                  preload(scenes[s]);
+                  viewerRef.current?.loadScene?.(s);
+                }}
+                className="h-10 w-14 rounded-lg overflow-hidden border border-white/15 hover:border-white/40 transition"
+                title={`Panorámica ${String(i + 1).padStart(2, "0")}`}
+                aria-label={`Panorámica ${i + 1}`}
               >
-                ✕
+                <img
+                  src={(thumbs as any)[s] ?? (thumbs as any)[`f${i + 1}`]}
+                  alt={`Panorámica ${i + 1}`}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      (thumbs as any)[`f${i + 1}`];
+                  }}
+                />
               </button>
-            </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ✅ Sidebar desktop fija */}
+        <aside className="hidden sm:block absolute left-0 top-0 z-30 h-full w-[360px] bg-white text-slate-900 border-r border-black/10">
+          <div className="h-full overflow-y-auto px-6 pt-24 pb-8">
+            <p className="text-[11px] uppercase tracking-widest text-slate-500">
+              Tour 360°
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold leading-tight">
+              Unidad {id}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">{subtitulo}</p>
 
             {unidad && (
               <div className="mt-4">
@@ -443,47 +479,89 @@ export default function TourPage() {
           </div>
         </aside>
 
-        {/* VISOR */}
-        <section className="relative flex-1">
-          <div className="absolute inset-0 bg-[#e9f0f3]" />
-
-          <div className="absolute inset-0">
-            <div ref={containerRef} className="h-full w-full" />
-          </div>
-
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
-            <div className="rounded-full bg-black/30 backdrop-blur border border-white/10 px-3 py-2 flex items-center gap-2">
-              {(["s1", "s2", "s3"] as SceneId[]).map((s, i) => (
+        {/* ✅ Drawer mobile info */}
+        {infoOpen && (
+          <>
+            <button
+              className="sm:hidden fixed inset-0 z-40 bg-black/30"
+              aria-label="Cerrar info"
+              onClick={() => setInfoOpen(false)}
+              type="button"
+            />
+            <div className="sm:hidden fixed left-0 top-0 z-50 h-full w-[88vw] max-w-[360px] bg-white border-r border-black/10 shadow-xl">
+              <div className="h-full overflow-y-auto px-6 pt-20 pb-8">
                 <button
-                  key={s}
                   type="button"
-                  onClick={() => {
-                    preload(scenes[s]);
-                    viewerRef.current?.loadScene?.(s);
-                  }}
-                  className="h-10 w-14 rounded-lg overflow-hidden border border-white/15 hover:border-white/40 transition"
-                  title={`Panorámica ${String(i + 1).padStart(2, "0")}`}
-                  aria-label={`Panorámica ${i + 1}`}
+                  onClick={() => setInfoOpen(false)}
+                  className="absolute right-4 top-4 h-10 w-10 rounded-full border border-black/10 bg-white hover:bg-slate-50 transition flex items-center justify-center"
+                  aria-label="Cerrar"
+                  title="Cerrar"
                 >
-                  <img
-                    src={(thumbs as any)[s] ?? (thumbs as any)[`_fallback${i + 1}`]}
-                    alt={`Panorámica ${i + 1}`}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        (thumbs as any)[`_fallback${i + 1}`];
-                    }}
-                  />
+                  ✕
                 </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      </div>
 
-            <style jsx global>{`
+                <p className="text-[11px] uppercase tracking-widest text-slate-500">
+                  Tour 360°
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold leading-tight">
+                  Unidad {id}
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">{subtitulo}</p>
+
+                {unidad && (
+                  <div className="mt-4">
+                    <EstadoPill estado={unidad.estado} />
+                  </div>
+                )}
+
+                <hr className="my-6 border-black/10" />
+
+                <p className="text-[11px] uppercase tracking-widest text-slate-500">
+                  Cómo navegar
+                </p>
+
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-xl border border-black/10 bg-white p-4">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                      Hotspots
+                    </p>
+                    <p className="mt-1 text-sm">
+                      Tocá los puntos para moverte entre ambientes.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-black/10 bg-white p-4">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                      Miniaturas
+                    </p>
+                    <p className="mt-1 text-sm">
+                      Abajo podés elegir la panorámica (01 / 02 / 03).
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-black/10 bg-white p-4">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                      Volver
+                    </p>
+                    <p className="mt-1 text-sm">
+                      Botón volver te lleva a la planta.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-6 text-[11px] text-slate-400">
+                  Estado del visor:{" "}
+                  <span className="font-semibold">
+                    {ready ? "Listo" : "Cargando..."}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+
+      <style jsx global>{`
         .hs-dot {
           position: relative;
           width: 22px;
@@ -494,7 +572,6 @@ export default function TourPage() {
           cursor: pointer;
           transition: transform 0.2s ease, opacity 0.2s ease;
         }
-
         .hs-dot::before {
           content: "";
           position: absolute;
@@ -510,12 +587,10 @@ export default function TourPage() {
           filter: blur(2px);
           animation: hsPulse 2.4s ease-out infinite;
         }
-
         .hs-dot:hover {
           transform: scale(1.15);
           opacity: 0.95;
         }
-
         @keyframes hsPulse {
           0% {
             transform: scale(0.7);
@@ -531,6 +606,6 @@ export default function TourPage() {
           }
         }
       `}</style>
-    </main> 
+    </main>
   );
 }

@@ -74,9 +74,12 @@ export default function ExplorarClient() {
 
   const [plantaActual, setPlantaActual] = useState<Piso>(pisoInicial);
 
-  // ✅ FIX delay: swap suave (mantiene anterior hasta que cargue la nueva)
+  // ✅ mejora de “delay”: mantener la anterior hasta que cargue la nueva
   const [imgSrc, setImgSrc] = useState<string>(pisoInicial.src);
   const [loadingPlanta, setLoadingPlanta] = useState(false);
+
+  // ✅ mobile tap: abrir/cerrar card por unidad
+  const [activeUnidadId, setActiveUnidadId] = useState<string | null>(null);
 
   // sync con query param
   useEffect(() => {
@@ -86,7 +89,7 @@ export default function ExplorarClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [floorParam]);
 
-  // precarga plantas (evita micro flash)
+  // precarga plantas
   useEffect(() => {
     PISOS.forEach((p) => {
       const img = new Image();
@@ -134,8 +137,10 @@ export default function ExplorarClient() {
   );
 
   return (
-    <main className="relative h-screen w-screen bg-black text-white overflow-hidden">
-      {/* ✅ Menú premium global */}
+    <main
+      className="relative h-screen w-screen bg-[#0b0f11] sm:bg-black text-white overflow-hidden"
+      onClick={() => setActiveUnidadId(null)}
+    >
       <TopLeftMenu backHref="/" />
 
       {/* PLANO FULL SCREEN */}
@@ -143,7 +148,7 @@ export default function ExplorarClient() {
         <img
           src={imgSrc}
           alt={`Plano ${plantaActual.label}`}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain sm:object-cover"
           draggable={false}
         />
         <div className="absolute inset-0 bg-black/20" />
@@ -167,6 +172,8 @@ export default function ExplorarClient() {
             plantaActual.id === "pb" ||
             String(u.tipo).toLowerCase() === "local";
 
+          const isOpen = activeUnidadId === String(u.id);
+
           return (
             <div
               key={`${h.pisoId}-${h.unidadId}`}
@@ -174,7 +181,14 @@ export default function ExplorarClient() {
                 vendido ? "pointer-events-none opacity-80" : ""
               }`}
               style={{ left: `${h.x}%`, top: `${h.y}%` }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveUnidadId((prev) =>
+                  prev === String(u.id) ? null : String(u.id)
+                );
+              }}
             >
+              {/* pin */}
               <span className="relative block -translate-x-1/2 -translate-y-1/2">
                 <span
                   className={`absolute inset-0 rounded-full ${styles.ring} animate-ping`}
@@ -184,19 +198,33 @@ export default function ExplorarClient() {
                 />
               </span>
 
+              {/* label */}
               <span className="absolute left-1/2 top-1/2 mt-3 -translate-x-1/2 text-[11px] uppercase tracking-widest text-white/80">
                 {h.label}
               </span>
 
+              {/* card hover (desktop) + tap (mobile) */}
               {!vendido && (
-                <div className="pointer-events-none opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition absolute left-1/2 top-1/2 mt-6 -translate-x-1/2 z-30 w-[280px]">
-                  <div className="pointer-events-auto rounded-2xl border border-white/10 bg-black/90 p-4 backdrop-blur">
+                <div
+                  className={[
+                    "absolute left-1/2 top-1/2 mt-6 -translate-x-1/2 z-30 w-[280px]",
+                    // Desktop hover
+                    "pointer-events-none opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0",
+                    // Mobile tap
+                    isOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "",
+                    "transition",
+                  ].join(" ")}
+                >
+                  <div
+                    className="rounded-2xl border border-white/10 bg-black/90 p-4 backdrop-blur"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-medium">{u.nombre}</p>
                         <p className="mt-1 text-xs text-zinc-400">
-                          {u.tipo} –{" "}
-                          {u.frente ? "Frente" : "Contrafrente"} – {u.m2} m²
+                          {u.tipo} – {u.frente ? "Frente" : "Contrafrente"} –{" "}
+                          {u.m2} m²
                         </p>
                       </div>
 
@@ -252,10 +280,7 @@ export default function ExplorarClient() {
         })}
       </div>
 
-      {/* ✅ CARD PISOS RESPONSIVE:
-          - Mobile: bottom sheet centrado, scroll horizontal
-          - Desktop: igual que antes (derecha, centrado vertical)
-      */}
+      {/* CARD PISOS RESPONSIVE */}
       <aside
         className="
           fixed z-40
@@ -264,16 +289,19 @@ export default function ExplorarClient() {
           sm:absolute sm:left-auto sm:bottom-auto sm:right-6 sm:top-1/2
           sm:-translate-y-1/2 sm:translate-x-0 sm:w-[220px]
         "
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="rounded-[26px] bg-[#EAEAEA] p-3 sm:p-4 shadow-xl">
-          {/* mobile: horizontal */}
           <div className="flex sm:flex-col gap-2 sm:gap-3 overflow-x-auto sm:overflow-visible">
             {PISOS.map((p) => {
               const active = plantaActual.id === p.id;
               return (
                 <button
                   key={p.id}
-                  onClick={() => setPlantaActual(p)}
+                  onClick={() => {
+                    setActiveUnidadId(null);
+                    setPlantaActual(p);
+                  }}
                   className={[
                     "shrink-0 rounded-full px-4 py-3 text-[11px] uppercase tracking-widest transition",
                     "min-w-[150px] sm:min-w-0",
@@ -288,9 +316,8 @@ export default function ExplorarClient() {
             })}
           </div>
 
-          {/* hint mobile */}
           <p className="mt-2 text-[11px] text-[#183e4b]/70 sm:hidden">
-            Deslizá para ver más pisos.
+            Tocá un punto para ver acciones. Deslizá para ver más pisos.
           </p>
         </div>
       </aside>
