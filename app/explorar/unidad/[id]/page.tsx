@@ -162,8 +162,11 @@ export default function GaleriaUnidadPage() {
       <div className="relative w-full flex flex-col lg:flex-row">
         {/* SIDEBAR (en mobile ocupa todo el ancho) */}
         <aside className="relative z-30 w-full lg:w-[360px] shrink-0 bg-white text-slate-900 border-r border-black/10">
-          {/* Botonera */}
-          <div className="absolute left-4 top-4 z-40 flex items-center gap-3">
+          
+          {/* Header sticky (evita superposición al scrollear) */}
+<div className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-black/10">
+  <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+    </div>
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
@@ -261,7 +264,7 @@ export default function GaleriaUnidadPage() {
           )}
 
           {/* CONTENIDO */}
-          <div className="px-6 pt-24 pb-8">
+          <div className="px-6 pt-6 pb-8">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-widest text-slate-500">
