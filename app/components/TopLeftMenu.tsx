@@ -9,55 +9,43 @@ export default function TopLeftMenu({ backHref = "/" }: { backHref?: string }) {
   return (
     <>
       {/* Botonera */}
-      <div className="absolute left-6 top-6 z-50">
-        <div className="flex flex-row flex-nowrap items-center gap-3 min-w-[104px]">
-          {/* MENÚ */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            className="h-11 w-11 shrink-0 rounded-full bg-emerald-200/70 text-slate-900 shadow-sm border border-black/10 hover:bg-emerald-200 transition flex items-center justify-center"
-            aria-label="Menú"
-            title="Menú"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 6h16M4 12h16M4 18h16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-
-          {/* VOLVER */}
-          <Link
-            href={backHref}
-            className="h-11 w-11 shrink-0 rounded-full bg-white text-slate-900 shadow-sm border border-black/10 hover:bg-slate-50 transition flex items-center justify-center"
-            aria-label="Volver"
-            title="Volver"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M15 18l-6-6 6-6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        </div>
-      </div>
-
-      {/* Backdrop para cerrar al click afuera */}
-      {menuOpen && (
+      <div className="absolute left-6 top-6 z-50 flex items-center gap-3">
+        {/* MENÚ */}
         <button
           type="button"
-          aria-label="Cerrar menú"
-          onClick={() => setMenuOpen(false)}
-          className="fixed inset-0 z-40 cursor-default"
-        />
-      )}
+          onClick={() => setMenuOpen((v) => !v)}
+          className="h-11 w-11 rounded-full bg-emerald-200/70 text-slate-900 shadow-sm border border-black/10 hover:bg-emerald-200 transition flex items-center justify-center"
+          aria-label="Menú"
+          title="Menú"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M4 6h16M4 12h16M4 18h16"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+
+        {/* VOLVER */}
+        <Link
+          href={backHref}
+          className="h-11 w-11 rounded-full bg-white text-slate-900 shadow-sm border border-black/10 hover:bg-slate-50 transition flex items-center justify-center"
+          aria-label="Volver"
+          title="Volver"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M15 18l-6-6 6-6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+      </div>
 
       {/* Card menú */}
       {menuOpen && (
@@ -82,13 +70,15 @@ export default function TopLeftMenu({ backHref = "/" }: { backHref?: string }) {
           </div>
 
           <div className="px-5 pb-5 flex flex-col gap-3">
+            {/* ✅ SOLO DESKTOP/TABLET: oculto en mobile */}
             <Link
               href="/explorar"
-              className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+              className="hidden sm:block rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
               onClick={() => setMenuOpen(false)}
             >
               Explorar edificio
             </Link>
+
             <Link
               href="/unidades"
               className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
@@ -96,6 +86,7 @@ export default function TopLeftMenu({ backHref = "/" }: { backHref?: string }) {
             >
               Ver unidades
             </Link>
+
             <Link
               href="/ubicacion"
               className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
@@ -103,6 +94,7 @@ export default function TopLeftMenu({ backHref = "/" }: { backHref?: string }) {
             >
               Ubicación
             </Link>
+
             <Link
               href="/contacto"
               className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
