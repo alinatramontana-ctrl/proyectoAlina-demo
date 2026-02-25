@@ -28,10 +28,10 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
       { pitch: -34, yaw: 55.0, to: "s3" },
     ],
     s2: [
-      { pitch: -39, yaw: 177, to: "s1" },
-      { pitch: -44, yaw: -94, to: "s3" },
+      { pitch: -37, yaw: 122, to: "s1" },
+      { pitch: -49, yaw: -148, to: "s3" },
     ],
-    s3: [{ pitch: -24, yaw: -139, to: "s1" }],
+    s3: [{ pitch: -25, yaw: 135, to: "s1" }],
   },
   "2A": {
     s1: [
@@ -357,7 +357,7 @@ export default function TourPage() {
               <div className="px-5 pb-5 flex flex-col gap-3">
                 <Link
                   href="/explorar"
-                  className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+                  className="hidden sm:block rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
                 >
                   Explorar edificio
                 </Link>

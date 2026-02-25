@@ -159,9 +159,9 @@ export default function GaleriaUnidadPage() {
 
   return (
     <main className="min-h-screen w-full bg-[#e9f0f3]">
-      <div className="relative w-full flex flex-col lg:flex-row">
+      <div className="relative w-full flex flex-col lg:flex-row lg:h-screen">
         {/* SIDEBAR */}
-        <aside className="relative z-30 w-full lg:w-[360px] shrink-0 bg-white text-slate-900 border-r border-black/10">
+        <aside className="relative z-30 w-full lg:w-[360px] shrink-0 bg-white text-slate-900 border-r border-black/10 lg:h-screen lg:flex lg:flex-col">
           {/* HEADER STICKY (botones alineados + menú) */}
           <div className="sticky top-0 z-50 bg-white/92 backdrop-blur border-b border-black/10">
             <div className="px-4 py-4 flex items-center gap-3">
@@ -229,7 +229,7 @@ export default function GaleriaUnidadPage() {
                   <div className="px-5 pb-5 flex flex-col gap-3">
                     <Link
                       href="/explorar"
-                      className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+                      className="hidden sm:block rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
                       onClick={() => setMenuOpen(false)}
                     >
                       Explorar edificio
@@ -267,7 +267,7 @@ export default function GaleriaUnidadPage() {
           </div>
 
           {/* CONTENIDO */}
-          <div className="px-6 pt-6 pb-8">
+          <div className="px-6 pt-6 pb-8 lg:flex-1 lg:overflow-y-auto">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-widest text-slate-500">
