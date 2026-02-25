@@ -173,11 +173,12 @@ export default function UnidadesPage() {
 
     <div className="px-5 pb-5 flex flex-col gap-3">
       <Link
-        href="/explorar"
-        className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-      >
-        Explorar edificio
-      </Link>
+  href="/explorar"
+  className="hidden sm:block rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+  onClick={() => setMenuOpen(false)}
+>
+  Explorar edificio
+</Link>
       <Link
         href="/unidades"
         className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
