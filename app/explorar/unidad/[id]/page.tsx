@@ -49,8 +49,8 @@ export default function GaleriaUnidadPage() {
   const searchParams = useSearchParams();
 
   const unidadId = String(params?.id ?? "").toUpperCase();
-  const from = searchParams.get("from"); // "unidades"
-  const floor = searchParams.get("floor"); // "azotea" | "3" | "2" | "1" | "pb"
+  const from = searchParams.get("from");
+  const floor = searchParams.get("floor");
 
   const backHref =
     from === "unidades"
@@ -63,20 +63,15 @@ export default function GaleriaUnidadPage() {
     return UNIDADES.find((u) => String(u.id).toUpperCase() === unidadId) ?? null;
   }, [unidadId]);
 
-  // Si no existe, volvemos a donde corresponda
   useEffect(() => {
     if (!unidadId) return;
     if (!unidad) router.push(backHref);
   }, [unidad, unidadId, router, backHref]);
 
-  // Lista REAL de imágenes existentes
   const [images, setImages] = useState<string[]>([]);
   const [idx, setIdx] = useState(0);
-
-  // loading para evitar flashes
   const [loading, setLoading] = useState(true);
 
-  // Evitar race conditions
   const runIdRef = useRef(0);
 
   useEffect(() => {
@@ -95,11 +90,10 @@ export default function GaleriaUnidadPage() {
       const batchSize = 4;
 
       for (let start = 1; start <= max; start += batchSize) {
-        const batch: { i: number; src: string }[] = [];
+        const batch: { src: string }[] = [];
         for (let i = start; i < start + batchSize && i <= max; i++) {
           const name = String(i).padStart(2, "0");
-          const src = `${base}/${name}.jpg`;
-          batch.push({ i, src });
+          batch.push({ src: `${base}/${name}.jpg` });
         }
 
         const results = await Promise.all(batch.map((b) => loadImage(b.src)));
@@ -123,17 +117,14 @@ export default function GaleriaUnidadPage() {
     }
 
     if (unidadId) run();
-
     return () => {
       cancelled = true;
     };
   }, [unidadId]);
 
-  // Navegación teclado (solo desktop/pc lo va a usar)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") router.push(backHref);
-
       if (e.key === "ArrowRight" && images.length > 0) {
         setIdx((v) => Math.min(v + 1, images.length - 1));
       }
@@ -141,12 +132,10 @@ export default function GaleriaUnidadPage() {
         setIdx((v) => Math.max(v - 1, 0));
       }
     }
-
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [router, backHref, images.length]);
 
-  // Menú
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (!unidad) return null;
@@ -164,18 +153,17 @@ export default function GaleriaUnidadPage() {
     : `/tour/${encodeURIComponent(unidad.id)}?from=explorar`;
 
   const consultarHref = `/contacto?unidad=${encodeURIComponent(unidad.nombre)}`;
-
   const coverSrc = `/renders-unidades/${unidadId}/cover.jpg`;
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-[#e9f0f3]">
-      {/* ✅ Mobile: columna / Desktop: fila */}
-      <div className="relative h-full w-full flex flex-col lg:flex-row">
+    // ✅ en mobile NO usamos h-screen + overflow-hidden (porque corta contenido)
+    <main className="min-h-screen w-full bg-[#e9f0f3]">
+      {/* ✅ Layout: columna en mobile / fila en desktop */}
+      <div className="relative w-full flex flex-col lg:flex-row">
         {/* SIDEBAR (en mobile ocupa todo el ancho) */}
         <aside className="relative z-30 w-full lg:w-[360px] shrink-0 bg-white text-slate-900 border-r border-black/10">
-          {/* Botonera arriba izquierda */}
+          {/* Botonera */}
           <div className="absolute left-4 top-4 z-40 flex items-center gap-3">
-            {/* MENU */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
@@ -193,7 +181,6 @@ export default function GaleriaUnidadPage() {
               </svg>
             </button>
 
-            {/* VOLVER */}
             <button
               type="button"
               onClick={() => router.push(backHref)}
@@ -213,7 +200,7 @@ export default function GaleriaUnidadPage() {
             </button>
           </div>
 
-          {/* CARD MENÚ desplegable */}
+          {/* Menú */}
           {menuOpen && (
             <div className="absolute left-4 top-[72px] z-40 w-[300px] rounded-[26px] bg-[#EAEAEA] text-[#183e4b] shadow-xl overflow-hidden">
               <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
@@ -267,14 +254,14 @@ export default function GaleriaUnidadPage() {
 
                 <p className="mt-1 text-[11px] text-[#183e4b]/70">
                   Tip: presioná <span className="font-semibold">ESC</span> para
-                  volver a la planta.
+                  volver.
                 </p>
               </div>
             </div>
           )}
 
           {/* CONTENIDO */}
-          <div className="h-full overflow-y-auto px-6 pt-24 pb-8">
+          <div className="px-6 pt-24 pb-8">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-widest text-slate-500">
@@ -316,7 +303,6 @@ export default function GaleriaUnidadPage() {
                       if (placeholder) placeholder.style.display = "flex";
                     }}
                   />
-
                   <div
                     id="cover-placeholder"
                     className="absolute inset-0 hidden items-center justify-center text-slate-400 text-sm"
@@ -380,21 +366,83 @@ export default function GaleriaUnidadPage() {
               </Link>
             </div>
 
+            {/* ✅ GALERÍA MOBILE (debajo de la card) */}
+            <div className="mt-8 lg:hidden">
+              <p className="text-[11px] uppercase tracking-widest text-slate-500">
+                Renders
+              </p>
+
+              <div className="mt-3 rounded-2xl border border-black/10 bg-white overflow-hidden">
+                <div className="relative w-full aspect-[16/10] bg-white">
+                  {loading ? (
+                    <div className="absolute inset-0 animate-pulse bg-slate-100" />
+                  ) : current ? (
+                    <img
+                      src={current}
+                      alt={`${unidad.nombre} render ${idx + 1}`}
+                      className="absolute inset-0 h-full w-full object-contain bg-white"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm px-6 text-center">
+                      No hay imágenes cargadas para {unidadId}.
+                    </div>
+                  )}
+                </div>
+
+                {/* miniaturas solo si hay +1 */}
+                {!loading && images.length > 1 && (
+                  <div className="border-t border-black/10 p-3">
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {images.map((src, i) => {
+                        const active = i === idx;
+                        return (
+                          <button
+                            key={src}
+                            type="button"
+                            onClick={() => setIdx(i)}
+                            className={[
+                              "shrink-0 overflow-hidden rounded-xl border",
+                              active
+                                ? "border-[#183e4b] shadow-sm"
+                                : "border-black/10",
+                            ].join(" ")}
+                            aria-label={`Ver imagen ${i + 1}`}
+                            title={`Imagen ${i + 1}`}
+                          >
+                            <div className="w-[80px] aspect-[4/3] bg-white">
+                              <img
+                                src={src}
+                                alt=""
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      {idx + 1} / {images.length}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <p className="mt-6 text-[11px] text-slate-400">
-              Tip: usá <span className="font-semibold">← →</span> para navegar
-              imágenes · <span className="font-semibold">ESC</span> para volver a
-              la planta.
+              Tip: en PC usá <span className="font-semibold">← →</span> para
+              navegar imágenes · <span className="font-semibold">ESC</span> para
+              volver.
             </p>
           </div>
         </aside>
 
-        {/* GALERÍA */}
-        <section className="relative w-full lg:flex-1">
-          {/* ✅ Desktop mantiene fullscreen del panel derecho */}
-          <div className="hidden lg:block absolute inset-0 bg-[#e9f0f3]" />
+        {/* ✅ GALERÍA DESKTOP (se mantiene igual) */}
+        <section className="relative flex-1 hidden lg:block h-screen overflow-hidden">
+          <div className="absolute inset-0 bg-[#e9f0f3]" />
 
-          {/* ✅ Desktop (igual que antes) */}
-          <div className="hidden lg:flex absolute inset-0 items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center">
             {loading ? (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="w-[70%] max-w-[900px]">
@@ -425,13 +473,12 @@ export default function GaleriaUnidadPage() {
             )}
           </div>
 
-          {/* Flechas (solo desktop) */}
           {images.length > 1 && !loading && (
             <>
               <button
                 type="button"
                 onClick={() => setIdx((v) => Math.max(v - 1, 0))}
-                className="hidden lg:flex absolute left-6 top-1/2 -translate-y-1/2 border border-black/10 bg-white/70 text-slate-900 w-11 h-11 rounded-full hover:bg-white transition z-20 items-center justify-center"
+                className="absolute left-6 top-1/2 -translate-y-1/2 border border-black/10 bg-white/70 text-slate-900 w-11 h-11 rounded-full hover:bg-white transition z-20 flex items-center justify-center"
                 aria-label="Anterior"
               >
                 ‹
@@ -439,7 +486,7 @@ export default function GaleriaUnidadPage() {
               <button
                 type="button"
                 onClick={() => setIdx((v) => Math.min(v + 1, images.length - 1))}
-                className="hidden lg:flex absolute right-6 top-1/2 -translate-y-1/2 border border-black/10 bg-white/70 text-slate-900 w-11 h-11 rounded-full hover:bg-white transition z-20 items-center justify-center"
+                className="absolute right-6 top-1/2 -translate-y-1/2 border border-black/10 bg-white/70 text-slate-900 w-11 h-11 rounded-full hover:bg-white transition z-20 flex items-center justify-center"
                 aria-label="Siguiente"
               >
                 ›
@@ -447,86 +494,13 @@ export default function GaleriaUnidadPage() {
             </>
           )}
 
-          {/* Contador (solo desktop) */}
-          <div className="hidden lg:block absolute bottom-6 left-1/2 -translate-x-1/2 text-[11px] uppercase tracking-widest text-slate-700 bg-white/70 border border-black/10 px-3 py-1 rounded-full z-20">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[11px] uppercase tracking-widest text-slate-700 bg-white/70 border border-black/10 px-3 py-1 rounded-full z-20">
             {loading
               ? "Cargando…"
               : images.length
               ? `${idx + 1} / ${images.length}`
               : "0 / 0"}{" "}
             — ← → para navegar · ESC para volver
-          </div>
-
-          {/* ✅ MOBILE: galería abajo de la card */}
-          <div className="lg:hidden w-full border-t border-black/10 bg-[#e9f0f3]">
-            <div className="px-4 py-4">
-              {loading ? (
-                <div className="w-full">
-                  <div className="aspect-[16/9] rounded-2xl bg-white/60 border border-black/10 shadow-sm animate-pulse" />
-                  <p className="mt-3 text-center text-slate-500 text-sm">
-                    Cargando renders…
-                  </p>
-                </div>
-              ) : current ? (
-                <>
-                  {/* Imagen principal */}
-                  <div className="rounded-2xl border border-black/10 bg-white overflow-hidden">
-                    <div className="relative w-full aspect-[16/9]">
-                      <img
-  src={current}
-  alt={`${unidad.nombre} render ${idx + 1}`}
-  className="absolute inset-0 h-full w-full object-contain bg-white"
-/>
-                    </div>
-                  </div>
-
-                  {/* Miniaturas (scroll horizontal) */}
-                  {images.length > 1 && (
-                    <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                      {images.map((src, i) => {
-                        const active = i === idx;
-                        return (
-                          <button
-                            key={src}
-                            type="button"
-                            onClick={() => setIdx(i)}
-                            className={[
-                              "shrink-0 rounded-xl overflow-hidden border transition",
-                              active
-                                ? "border-[#183e4b] shadow-sm"
-                                : "border-black/10 opacity-80",
-                            ].join(" ")}
-                            aria-label={`Ver render ${i + 1}`}
-                            title={`Render ${i + 1}`}
-                          >
-                            <div className="w-[80px] aspect-[4/3] bg-white">
-                              <img
-                                src={src}
-                                alt={`Miniatura ${i + 1}`}
-                                className="h-full w-full object-cover"
-                                loading="lazy"
-                              />
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Contador mobile */}
-                  <p className="mt-2 text-center text-[11px] uppercase tracking-widest text-slate-600">
-                    {images.length ? `${idx + 1} / ${images.length}` : "0 / 0"}
-                  </p>
-                </>
-              ) : (
-                <div className="text-slate-500 px-4 text-center">
-                  No hay imágenes cargadas para {unidadId} en{" "}
-                  <span className="font-semibold">
-                    /public/renders-unidades/{unidadId}/
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
         </section>
       </div>
