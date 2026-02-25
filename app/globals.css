@@ -37,4 +37,16 @@ body {
 
 .animate-fadeInSoft {
   animation: fadeInSoft 220ms ease-out;
+  
+}
+/* Tour 360 – mover controles del visor a la derecha en mobile */
+@media (max-width: 640px) {
+  .pnlm-controls-container,
+  .pnlm-ui,
+  .pnlm-zoom-controls,
+  .pnlm-fullscreen-toggle-button,
+  .pnlm-compass {
+    left: auto !important;
+    right: 12px !important;
+  }
 }
