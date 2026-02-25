@@ -22,8 +22,9 @@ export default function Home() {
   }, []);
 
   return (
-    <main className={`${sourceSans.className} relative min-h-screen overflow-hidden text-white bg-black`}>
-      
+    <main
+      className={`${sourceSans.className} relative min-h-screen overflow-hidden text-white bg-black`}
+    >
       {/* VIDEO HERO */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
@@ -83,10 +84,11 @@ export default function Home() {
             </div>
 
             <div className="mt-5 flex flex-col gap-3">
+              {/* ✅ SOLO PC/TABLET: oculto en mobile */}
               <Link
                 href="/explorar"
                 onClick={() => setOpen(false)}
-                className="rounded-full bg-[#8ba0a4] px-5 py-3 text-center text-xs uppercase tracking-[0.25em] text-[#EAEAEA] hover:brightness-95 transition"
+                className="hidden sm:block rounded-full bg-[#8ba0a4] px-5 py-3 text-center text-xs uppercase tracking-[0.25em] text-[#EAEAEA] hover:brightness-95 transition"
               >
                 Explorar edificio
               </Link>

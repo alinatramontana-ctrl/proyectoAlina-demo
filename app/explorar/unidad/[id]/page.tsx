@@ -68,6 +68,8 @@ export default function GaleriaUnidadPage() {
     if (!unidad) router.push(backHref);
   }, [unidad, unidadId, router, backHref]);
 
+  const isLocal = unidadId === "L1" || unidadId === "L2";
+
   const [images, setImages] = useState<string[]>([]);
   const [idx, setIdx] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -156,112 +158,113 @@ export default function GaleriaUnidadPage() {
   const coverSrc = `/renders-unidades/${unidadId}/cover.jpg`;
 
   return (
-    // ✅ en mobile NO usamos h-screen + overflow-hidden (porque corta contenido)
     <main className="min-h-screen w-full bg-[#e9f0f3]">
-      {/* ✅ Layout: columna en mobile / fila en desktop */}
       <div className="relative w-full flex flex-col lg:flex-row">
-        {/* SIDEBAR (en mobile ocupa todo el ancho) */}
+        {/* SIDEBAR */}
         <aside className="relative z-30 w-full lg:w-[360px] shrink-0 bg-white text-slate-900 border-r border-black/10">
-          
-          {/* Header sticky (evita superposición al scrollear) */}
-<div className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-black/10">
-  <div className="px-4 pt-4 pb-3 flex items-center gap-3">
-    </div>
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              className="h-11 w-11 rounded-full bg-emerald-200/70 text-slate-900 shadow-sm border border-black/10 hover:bg-emerald-200 transition flex items-center justify-center"
-              aria-label="Menú"
-              title="Menú"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M4 6h16M4 12h16M4 18h16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
+          {/* HEADER STICKY (botones alineados + menú) */}
+          <div className="sticky top-0 z-50 bg-white/92 backdrop-blur border-b border-black/10">
+            <div className="px-4 py-4 flex items-center gap-3">
+              {/* MENÚ */}
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="h-11 w-11 rounded-full bg-emerald-200/70 text-slate-900 shadow-sm border border-black/10 hover:bg-emerald-200 transition flex items-center justify-center"
+                aria-label="Menú"
+                title="Menú"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M4 6h16M4 12h16M4 18h16"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => router.push(backHref)}
-              className="h-11 w-11 rounded-full bg-white/80 text-slate-900 shadow-sm border border-black/10 hover:bg-white transition flex items-center justify-center"
-              aria-label="Volver"
-              title="Volver"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M15 18l-6-6 6-6"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Menú */}
-          {menuOpen && (
-            <div className="absolute left-4 top-[72px] z-40 w-[300px] rounded-[26px] bg-[#EAEAEA] text-[#183e4b] shadow-xl overflow-hidden">
-              <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.25em] text-[#183e4b]/70">
-                    Menú
-                  </p>
-                  <p className="mt-1 text-lg leading-tight font-semibold">
-                    Edificio Innovate
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-full bg-black/10 px-3 py-1 text-[11px] uppercase tracking-widest hover:bg-black/15 transition"
-                >
-                  Cerrar
-                </button>
-              </div>
-
-              <div className="px-5 pb-5 flex flex-col gap-3">
-                <Link
-                  href="/explorar"
-                  className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Explorar edificio
-                </Link>
-                <Link
-                  href="/unidades"
-                  className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Ver unidades
-                </Link>
-                <Link
-                  href="/ubicacion"
-                  className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Ubicación
-                </Link>
-                <Link
-                  href="/contacto"
-                  className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Contacto
-                </Link>
-
-                <p className="mt-1 text-[11px] text-[#183e4b]/70">
-                  Tip: presioná <span className="font-semibold">ESC</span> para
-                  volver.
-                </p>
-              </div>
+              {/* VOLVER */}
+              <button
+                type="button"
+                onClick={() => router.push(backHref)}
+                className="h-11 w-11 rounded-full bg-white text-slate-900 shadow-sm border border-black/10 hover:bg-slate-50 transition flex items-center justify-center"
+                aria-label="Volver"
+                title="Volver"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M15 18l-6-6 6-6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
-          )}
+
+            {/* CARD MENÚ */}
+            {menuOpen && (
+              <div className="px-4 pb-4">
+                <div className="w-[300px] max-w-[calc(100vw-32px)] rounded-[26px] bg-[#EAEAEA] text-[#183e4b] shadow-xl overflow-hidden">
+                  <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.25em] text-[#183e4b]/70">
+                        Menú
+                      </p>
+                      <p className="mt-1 text-lg leading-tight font-semibold">
+                        Edificio Innovate
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-full bg-black/10 px-3 py-1 text-[11px] uppercase tracking-widest hover:bg-black/15 transition"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+
+                  <div className="px-5 pb-5 flex flex-col gap-3">
+                    <Link
+                      href="/explorar"
+                      className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Explorar edificio
+                    </Link>
+                    <Link
+                      href="/unidades"
+                      className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Ver unidades
+                    </Link>
+                    <Link
+                      href="/ubicacion"
+                      className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Ubicación
+                    </Link>
+                    <Link
+                      href="/contacto"
+                      className="rounded-full bg-[#8ba0a4] text-[#EAEAEA] text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Contacto
+                    </Link>
+
+                    <p className="mt-1 text-[11px] text-[#183e4b]/70">
+                      Tip: presioná <span className="font-semibold">ESC</span>{" "}
+                      para volver.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* CONTENIDO */}
           <div className="px-6 pt-6 pb-8">
@@ -361,15 +364,18 @@ export default function GaleriaUnidadPage() {
                 Consultar precio
               </Link>
 
-              <Link
-                href={tourHref}
-                className="rounded-full bg-[#8ba0a4] text-white text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
-              >
-                Tour 360
-              </Link>
+              {/* ✅ SOLO SI NO ES LOCAL */}
+              {!isLocal && (
+                <Link
+                  href={tourHref}
+                  className="rounded-full bg-[#8ba0a4] text-white text-[11px] uppercase tracking-widest py-3 text-center hover:opacity-90 transition"
+                >
+                  Tour 360
+                </Link>
+              )}
             </div>
 
-            {/* ✅ GALERÍA MOBILE (debajo de la card) */}
+            {/* GALERÍA MOBILE (debajo de la card) */}
             <div className="mt-8 lg:hidden">
               <p className="text-[11px] uppercase tracking-widest text-slate-500">
                 Renders
@@ -392,7 +398,6 @@ export default function GaleriaUnidadPage() {
                   )}
                 </div>
 
-                {/* miniaturas solo si hay +1 */}
                 {!loading && images.length > 1 && (
                   <div className="border-t border-black/10 p-3">
                     <div className="flex gap-2 overflow-x-auto pb-1">
@@ -441,7 +446,7 @@ export default function GaleriaUnidadPage() {
           </div>
         </aside>
 
-        {/* ✅ GALERÍA DESKTOP (se mantiene igual) */}
+        {/* GALERÍA DESKTOP */}
         <section className="relative flex-1 hidden lg:block h-screen overflow-hidden">
           <div className="absolute inset-0 bg-[#e9f0f3]" />
 
