@@ -33,10 +33,10 @@ const HOTSPOTS: Hotspot[] = [
   { pisoId: "1", unidadId: "1B", label: "1B", x: 65, y: 55 },
 
   { pisoId: "2", unidadId: "2A", label: "2A", x: 50, y: 55 },
-  { pisoId: "2", unidadId: "2B", label: "2B", x: 68, y: 55 },
+  { pisoId: "2", unidadId: "2B", label: "2B", x: 72, y: 55 },
 
   { pisoId: "3", unidadId: "3A", label: "3A", x: 50, y: 60 },
-  { pisoId: "3", unidadId: "3B", label: "3B", x: 68, y: 60 },
+  { pisoId: "3", unidadId: "3B", label: "3B", x: 70, y: 60 },
 
   { pisoId: "pb", unidadId: "L1", label: "L1", x: 45, y: 50 },
   { pisoId: "pb", unidadId: "L2", label: "L2", x: 70, y: 50 },

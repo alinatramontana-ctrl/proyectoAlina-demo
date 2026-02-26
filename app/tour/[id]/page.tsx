@@ -14,18 +14,18 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
   "1A": {
     s1: [
       { pitch: -27.95, yaw: -93.46, to: "s2" },
-      { pitch: -33.38, yaw: -59.0, to: "s3" },
+      { pitch: -9, yaw: -51.0, to: "s3" },
     ],
     s2: [
-      { pitch: -39.24, yaw: -91.35, to: "s1" },
-      { pitch: -51.86, yaw: 158.65, to: "s3" },
+      { pitch: -32.24, yaw: -155, to: "s1" },
+      { pitch: -37.86, yaw: 130.65, to: "s3" },
     ],
-    s3: [{ pitch: -23.53, yaw: -146.56, to: "s1" }],
+    s3: [{ pitch: -8, yaw: 7, to: "s1" }],
   },
   "1B": {
     s1: [
       { pitch: -34, yaw: 85, to: "s2" },
-      { pitch: -34, yaw: 55.0, to: "s3" },
+      { pitch: -7, yaw: 47.0, to: "s3" },
     ],
     s2: [
       { pitch: -37, yaw: 122, to: "s1" },
@@ -35,35 +35,35 @@ const HOTSPOTS_BY_UNIT: Partial<Record<UnitId, UnitHotspots>> = {
   },
   "2A": {
     s1: [
-      { pitch: -26, yaw: 26, to: "s2" },
-      { pitch: -43, yaw: -89, to: "s3" },
+      { pitch: -11, yaw: 109, to: "s2" },
+      { pitch: -18, yaw: 79, to: "s3" },
     ],
-    s2: [{ pitch: -48, yaw: -159, to: "s1" }],
-    s3: [{ pitch: -55, yaw: -132, to: "s1" }],
+    s2: [{ pitch: -29, yaw: 149, to: "s1" }],
+    s3: [{ pitch: -28, yaw: 41, to: "s1" }],
   },
   "2B": {
     s1: [
-      { pitch: -24.67, yaw: 102, to: "s2" },
-      { pitch: -36, yaw: 86, to: "s3" },
+      { pitch: -4, yaw: 17, to: "s2" },
+      { pitch: -10, yaw: -41, to: "s3" },
     ],
-    s2: [{ pitch: -63, yaw: -144, to: "s1" }],
-    s3: [{ pitch: -51, yaw: -52, to: "s1" }],
+    s2: [{ pitch: -6, yaw: -33, to: "s1" }],
+    s3: [{ pitch: -6, yaw: -85, to: "s1" }],
   },
   "3A": {
     s1: [
-      { pitch: -26, yaw: 26, to: "s2" },
-      { pitch: -43, yaw: -89, to: "s3" },
+      { pitch: -11, yaw: 109, to: "s2" },
+      { pitch: -18, yaw: 79, to: "s3" },
     ],
-    s2: [{ pitch: -48, yaw: -159, to: "s1" }],
-    s3: [{ pitch: -55, yaw: -132, to: "s1" }],
+    s2: [{ pitch: -29, yaw: 149, to: "s1" }],
+    s3: [{ pitch: -28, yaw: 41, to: "s1" }],
   },
   "3B": {
     s1: [
-      { pitch: -24.67, yaw: 102, to: "s2" },
-      { pitch: -36, yaw: 86, to: "s3" },
+      { pitch: -4, yaw: 17, to: "s2" },
+      { pitch: -10, yaw: -41, to: "s3" },
     ],
-    s2: [{ pitch: -63, yaw: -144, to: "s1" }],
-    s3: [{ pitch: -51, yaw: -52, to: "s1" }],
+    s2: [{ pitch: -6, yaw: -33, to: "s1" }],
+    s3: [{ pitch: -6, yaw: -85, to: "s1" }],
   },
 };
 
